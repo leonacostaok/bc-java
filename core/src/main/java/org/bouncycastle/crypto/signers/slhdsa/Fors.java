@@ -1,6 +1,5 @@
 package org.bouncycastle.crypto.signers.slhdsa;
 
-import java.math.BigInteger;
 import java.util.LinkedList;
 
 import org.bouncycastle.util.Arrays;
@@ -147,18 +146,20 @@ class Fors
         int[] baseB = new int[outLen];
         int i = 0;
         int bits = 0;
-        BigInteger total = BigInteger.ZERO;
+        int total = 0;
+        int mask = (1 << b) - 1;
 
         for (int o = 0; o < outLen; o++)
         {
             while (bits < b)
             {
-                total = total.shiftLeft(8).add(BigInteger.valueOf(msg[i] & 0xff));
+                total = (total << 8) | (msg[i] & 0xff);
                 i+= 1;
                 bits += 8;
             }
             bits -= b;
-            baseB[o] = (total.shiftRight(bits).mod(BigInteger.valueOf(2).pow(b))).intValue();
+            // FORS uses at most 14 bits per index; the unread window fits in an int.
+            baseB[o] = (total >>> bits) & mask;
         }
 
         return baseB;
